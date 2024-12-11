@@ -1,17 +1,13 @@
-import type { Metadata } from "next";
-import localFont from "next/font/local";
-import "./globals.css";
+import '@mantine/core/styles.css';
+import {WalletAdapterProvider} from "@/providers/walletAdapterProvider";
+import {UmiProvider} from "@/providers/umiProvider";
+import type {Metadata} from "next";
+import {ColorSchemeScript, Container, mantineHtmlProps, MantineProvider} from '@mantine/core';
+import {theme} from '../theme';
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+import "./globals.css";
+import {Header} from "@/components/Header";
+
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -19,17 +15,39 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-  children,
-}: Readonly<{
+                                     children,
+                                   }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
-    </html>
+          <html lang="en" {...mantineHtmlProps}>
+          <WalletAdapterProvider>
+            <UmiProvider>
+
+
+              <head>
+                <ColorSchemeScript/>
+                <link rel="shortcut icon" href="/favicon.svg"/>
+                <meta
+                        name="viewport"
+                        content="minimum-scale=1, initial-scale=1, width=device-width, user-scalable=no"
+                />
+              </head>
+              <body
+                      className={`antialiased`}
+              >
+              <MantineProvider theme={theme} defaultColorScheme={'light'}>
+                <Container px={60} size={1440} m={'auto'}>
+                  <Header/>
+                  {children}
+                </Container>
+              </MantineProvider>
+
+              </body>
+
+            </UmiProvider>
+          </WalletAdapterProvider>
+
+          </html>
   );
 }
