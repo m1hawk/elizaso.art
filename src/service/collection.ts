@@ -12,3 +12,10 @@ export function selectNft(id: string) {
   });
 }
 
+export function verifyNFT(nftId: string, tx: string) {
+  return apiAxios.post('/api/verifyNFT', {
+    nftId,
+    tx
+  });
+}
+

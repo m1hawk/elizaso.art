@@ -2,6 +2,7 @@
 
 import {Network, VerificationStatus} from '@prisma/client';
 import prisma from '../lib/prisma'
+
 export const agentId = '66108e9f-b7ea-0ba3-876c-395fc7ea6fd4'
 export const creators = ['BMXEwzXCva42NefC8zhmW5qSbLEKp4hXFzf81xBfDD9A']
 export const getCollections = async (
@@ -53,6 +54,8 @@ export const createCollection = async (
           sellerFeeBasisPoints,
           metadataUri,
           creators,
+          supply,
+          mintPrice
         }: {
           networkId: Network,
           address: string,
@@ -63,6 +66,8 @@ export const createCollection = async (
           sellerFeeBasisPoints: number,
           metadataUri: string,
           creators: string[],
+          supply: number,
+          mintPrice: number,
         }) => {
   const collection = await prisma.collection.create({
     data: {
@@ -75,6 +80,8 @@ export const createCollection = async (
       sellerFeeBasisPoints,
       metadataUri,
       creators,
+      supply,
+      mintPrice,
     },
   });
 
@@ -103,13 +110,13 @@ export const getCollectionsByAgent = async (
     prisma.collection.count({
       where: {
         agentId,
-        ...(networkId && { networkId })
+        ...(networkId && {networkId})
       },
     }),
     prisma.collection.findMany({
       where: {
         agentId,
-        ...(networkId && { networkId })
+        ...(networkId && {networkId})
       },
       skip,
       take: pageSize,
@@ -118,7 +125,7 @@ export const getCollectionsByAgent = async (
       },
       include: {
         _count: {
-          select: { nfts: true }
+          select: {nfts: true}
         }
       }
     })
@@ -158,7 +165,6 @@ export const getNextTokenId = async (collectionAddress: string): Promise<number>
     throw error;
   }
 };
-
 
 
 // 定义必需的 NFT 输入接口
@@ -248,9 +254,7 @@ interface NFTUpdateInput {
 export async function updateNFT(
         // 查询条件
         where: {
-          networkId: Network
-          collectionAddress: string
-          tokenId: number
+          id: string
         },
         // 更新数据
         updateData: NFTUpdateInput
@@ -259,17 +263,13 @@ export async function updateNFT(
     // 首先验证 NFT 是否存在
     const existingNFT = await prisma.nFT.findFirst({
       where: {
-        networkId: where.networkId,
-        collectionAddress: where.collectionAddress,
-        tokenId: where.tokenId
+        id: where.id,
       }
     })
 
     if (!existingNFT) {
       throw new Error(
-              `NFT not found with networkId: ${where.networkId}, ` +
-              `collectionAddress: ${where.collectionAddress}, ` +
-              `tokenId: ${where.tokenId}`
+              `NFT not found with id: ${where.id}, `
       )
     }
 
@@ -281,7 +281,6 @@ export async function updateNFT(
         data[key] = value
       }
     })
-    console.log(22222,existingNFT, data);
     // 执行更新
     const updatedNFT = await prisma.nFT.update({
       where: {
@@ -296,6 +295,7 @@ export async function updateNFT(
     throw error
   }
 }
+
 interface PaginationParams {
   page: number      // 页码，从1开始
   pageSize: number  // 每页数量
@@ -332,7 +332,7 @@ export async function findUnverifiedNFTsByAgentId(
           collection: {
             agentId: where.agentId
           },
-          ...(where.networkId && { networkId: where.networkId }),
+          ...(where.networkId && {networkId: where.networkId}),
           verificationStatus: null
         },
         orderBy: [
@@ -365,6 +365,8 @@ export async function findUnverifiedNFTsByAgentId(
               symbol: true,
               authority: true,
               sellerFeeBasisPoints: true,
+              supply: true,
+              mintPrice: true,
             }
           }
         }
@@ -375,7 +377,7 @@ export async function findUnverifiedNFTsByAgentId(
           collection: {
             agentId: where.agentId
           },
-          ...(where.networkId && { networkId: where.networkId }),
+          ...(where.networkId && {networkId: where.networkId}),
           verificationStatus: null
         }
       })
@@ -398,7 +400,6 @@ export async function findUnverifiedNFTsByAgentId(
     throw error
   }
 }
-
 
 
 // 通过 id 查询 NFT 的验证状态
@@ -458,4 +459,23 @@ export async function updateNFTVerificationStatus(
     console.error('Error updating NFT verification status:', error)
     throw error
   }
+}
+
+
+export async function getNFTDetail(id: string) {
+  const nft = await prisma.nFT.findUnique({
+    where: {
+      id
+    },
+    include: {
+      collection: {
+        select: {
+          authority: true,
+          supply: true,
+          mintPrice: true,
+        }
+      }
+    }
+  })
+  return nft
 }

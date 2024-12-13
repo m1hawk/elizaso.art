@@ -5,12 +5,14 @@ import {getExplorerLink} from "@solana-developers/helpers";
 import umiWithCurrentWalletAdapter from "@/lib/umi/umiWithCurrentWalletAdapter";
 
 export async function mintNFT({
+                                mintPrice,
                          collectionAddress,
                          adminPublicKey,
                          name,
                          uri,
                          fee,
                        }: {
+  mintPrice: number;
   collectionAddress: string;
   adminPublicKey: string;
   name: string;
@@ -18,7 +20,8 @@ export async function mintNFT({
   fee: number;
 }):Promise<{
   address: string;
-  link:string
+  link:string;
+  tx: any
 }> {
 
   const umi = umiWithCurrentWalletAdapter();
@@ -34,7 +37,7 @@ export async function mintNFT({
           transferSol(umi, {
             source: umi.identity,
             destination: receiverAddressKey,
-            amount: sol(0.1),
+            amount: sol(mintPrice),
           })
   );
   const info = {
@@ -60,7 +63,7 @@ export async function mintNFT({
           })
   );
 
-  await transaction.sendAndConfirm(umi);
+  const tx = await transaction.sendAndConfirm(umi);
   //
   // await sleep();
   // const createdNft = await fetchDigitalAsset(umi, mint.publicKey);
@@ -76,6 +79,7 @@ export async function mintNFT({
 
   return {
     link: getExplorerLink("address", address, "devnet"),
-    address
+    address,
+    tx
   };
 }

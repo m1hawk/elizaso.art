@@ -31,6 +31,7 @@ model Collection {
   metadataUri String
   creators String[]
   supply    Int?     // 新增字段，设置为可选
+  mintPrice Float?   // 新增字段，使用 Float 类型且可选
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -52,7 +53,6 @@ model NFT {
   imageUri   String?
   creators String[]
   verificationStatus VerificationStatus?
-  mintPrice Float?   // 新增字段，使用 Float 类型且可选
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -16,5 +16,6 @@ export async function POST(request: NextRequest
   const res = await updateNFTVerificationStatus(id, VerificationStatus.SELECTED)
   return Response.json({
     success: true,
-    data: res})
+    data: res
+  })
 }

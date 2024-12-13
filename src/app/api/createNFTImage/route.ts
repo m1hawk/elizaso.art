@@ -10,7 +10,7 @@ export async function POST(request: NextRequest
   if (collections.total > 0) {
     const collection = collections.data[0]
     const nextTokenId = await getNextTokenId(collection.address);
-    await createNFT({
+    const nft = await createNFT({
       networkId: networkId,
       tokenId: nextTokenId,
       collectionAddress: collection.address
@@ -24,16 +24,14 @@ export async function POST(request: NextRequest
       tokenId: nextTokenId
     })
     await updateNFT({
-      networkId: networkId,
-      tokenId: nextTokenId,
-      collectionAddress: nftInfo.collectionAddress,
+      id: nft.id
     }, {
       name: nftInfo.name,
       symbol: nftInfo.symbol,
       authority: nftInfo.adminPublicKey,
       metadataUri: nftInfo.uri,
       imageUri: nftInfo.imageUri,
-      creators,
+      creators: [],
     })
     return Response.json({
       success: true, data: nftInfo

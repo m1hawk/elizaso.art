@@ -7,9 +7,20 @@ import {useDisclosure} from "@mantine/hooks";
 import {PiCheckFatDuotone} from "react-icons/pi";
 import {useMemo, useState} from "react";
 import {useRequest} from "ahooks";
-import {getNftList, selectNft} from "@/service/collection";
+import {getNftList, selectNft, verifyNFT} from "@/service/collection";
 import {notifications} from "@mantine/notifications";
+import umiWithCurrentWalletAdapter from "@/lib/umi/umiWithCurrentWalletAdapter";
+import { TransactionSignature} from "@metaplex-foundation/umi";
+import {base58} from "@metaplex-foundation/umi/serializers";
 
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// 字符串转 TransactionSignature
+const toTransactionSignature = (txAddress: string): TransactionSignature => {
+  return base58.serialize(txAddress) as TransactionSignature;
+}
 export default function Home() {
 
 
@@ -39,12 +50,16 @@ export default function Home() {
     try {
       await selectNft(selectedNft.id)
       const res = await mintNFT({
+        mintPrice: selectedNft.collection.mintPrice,
         collectionAddress: selectedNft.collectionAddress,
         adminPublicKey: selectedNft.collection.authority,
         name: selectedNft.name,
         uri: selectedNft.metadataUri,
         fee: selectedNft.collection.sellerFeeBasisPoints
       })
+      const tx= (base58.deserialize(res.tx.signature)[0])
+      await sleep(5000)
+      await verifyNFT(selectedNft.id, tx)
       refresh()
       setLink(res.link)
       open()
@@ -60,6 +75,14 @@ export default function Home() {
   }, {
     manual: true
   })
+
+  async function getInfo() {
+    const umi = umiWithCurrentWalletAdapter();
+    const deserializedCreateAssetTxAsU8 = toTransactionSignature('PDbdqMr2VsEmCuMAvUY8ptCxiDBXWPNRDiSsdWbpERRaCRYiAZeuUxmD15LDCrJpCXV66dg9j5SreNS2PMzjsZc');
+
+    const tx = await umi.rpc.getTransaction(deserializedCreateAssetTxAsU8)
+    console.log(1111, tx);
+  }
 
 
   return (
@@ -111,7 +134,7 @@ export default function Home() {
                               transform: 'translate(-50%, -50%)',
                             }}
                       >
-                        Total Supply 635/10,000
+                        {/*Total Supply 635/10,000*/}
                       </Text>
                     </Box>
 
@@ -124,9 +147,12 @@ export default function Home() {
                           onClick={mint}
                           loading={loading}
                   >
-                    0.1sol for Mint
+                    {selectedNft?.collection?.mintPrice} sol for Mint
                   </Button>
 
+                  <Button onClick={getInfo}>
+                    getInfo
+                  </Button>
                 </Stack>
 
               </Stack>

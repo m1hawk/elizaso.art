@@ -19,6 +19,8 @@ export async function POST(request: NextRequest
     agentId,
     networkId,
     address: res.address,
+    supply: res.supply,
+    mintPrice: res.mintPrice,
     name: res.collectionInfo.name,
     symbol: res.collectionInfo.symbol,
     authority: res.collectionInfo.adminPublicKey,
