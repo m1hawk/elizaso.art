@@ -5,29 +5,57 @@ import {CusCarousel} from "@/components/CusCarousel";
 import {mintNFT} from "@/lib/umi/collection";
 import {useDisclosure} from "@mantine/hooks";
 import {PiCheckFatDuotone} from "react-icons/pi";
-import {useState} from "react";
+import {useMemo, useState} from "react";
 import {useRequest} from "ahooks";
+import {getNftList, selectNft} from "@/service/collection";
+import {notifications} from "@mantine/notifications";
 
 export default function Home() {
 
+
+  const [index, setIndex] = useState(0)
+
+  function onSlideChange(index: any) {
+    setIndex(index)
+  }
+
+  const {data, refresh} = useRequest(async () => {
+    const res = await getNftList()
+    return res as any
+  })
+
+  const list = useMemo(() => {
+    return data?.items || []
+  }, [data])
+
+  const selectedNft = useMemo(() => {
+    return list[index]
+  }, [list, index])
 
   const [opened, {open, close}] = useDisclosure(false);
 
   const [link, setLink] = useState('')
   const {loading, run: mint} = useRequest(async () => {
     try {
+      await selectNft(selectedNft.id)
       const res = await mintNFT({
-        collectionAddress: 'GrN11tGqMghRE8vP74YXw4j7YG7hhDFV5vUkrDNXXhEw',
-        adminPublicKey: 'EE49vy1uWakjSgYWuPDeUXxn6W6kBhBS4qz1zYEZzudy',
-        name: 'text nft',
-        uri: 'test',
-        fee: 0
+        collectionAddress: selectedNft.collectionAddress,
+        adminPublicKey: selectedNft.collection.authority,
+        name: selectedNft.name,
+        uri: selectedNft.metadataUri,
+        fee: selectedNft.collection.sellerFeeBasisPoints
       })
+      refresh()
       setLink(res.link)
       open()
       return res
     } catch (e: any) {
-      console.log(e);
+      if (e.msg) {
+        notifications.show({
+          message: e.msg,
+        })
+      }
+
     }
   }, {
     manual: true
@@ -61,7 +89,7 @@ export default function Home() {
                 <Box pt={54} style={{flex: 1}}>
 
                   <Box style={{position: 'relative'}}>
-                    <CusCarousel/>
+                    <CusCarousel list={list} onSlideChange={onSlideChange}/>
                     <Box w={410} h={410}
                          style={{
                            position: 'absolute',

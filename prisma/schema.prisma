@@ -6,15 +6,59 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+// schema.prisma
 
-model User {
-  id   Int    @id
-  name String
-  url String
+enum Network {
+  SOLANA_MAINNET
+  SOLANA_DEVNET
 }
 
-model NFTCollection {
-  id   Int    @id
-  name String
-  url String
+enum VerificationStatus {
+  SELECTED
+  PENDING
+  SUCCESS
+}
+
+model Collection {
+  id        String   @id @default(cuid())
+  agentId   String
+  networkId Network
+  address   String
+  name      String
+  symbol    String
+  authority String
+  sellerFeeBasisPoints Float
+  metadataUri String
+  creators String[]
+  supply    Int?     // 新增字段，设置为可选
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  nfts NFT[]
+
+  @@unique([networkId, address])
+}
+
+model NFT {
+  id        String   @id @default(cuid())
+  networkId Network
+  address   String?
+  name      String?
+  symbol    String?
+  tokenId   Int
+  authority String?
+  metadataUri String?
+  imageUri   String?
+  creators String[]
+  verificationStatus VerificationStatus?
+  mintPrice Float?   // 新增字段，使用 Float 类型且可选
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  collectionAddress String?
+  collection Collection? @relation(fields: [collectionAddress, networkId], references: [address, networkId])
+
+  @@index([collectionAddress, networkId])
 }

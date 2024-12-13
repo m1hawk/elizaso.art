@@ -8,7 +8,6 @@ import { useEffect } from "react";
 function UmiProvider({ children }: { children: React.ReactNode }) {
   const wallet = useWallet();
   const umiStore = useUmiStore();
-  console.log(1111,wallet, umiStore);
   useEffect(() => {
     if (!wallet.publicKey) return;
     // When wallet.publicKey changes, update the signer in umiStore with the new wallet adapter.

@@ -6,7 +6,10 @@ import {ColorSchemeScript, Container, mantineHtmlProps, MantineProvider} from '@
 import {theme} from '../theme';
 
 import "./globals.css";
-import {Header} from "@/components/Header";
+import '@mantine/notifications/styles.css';
+
+// import {Header} from "@/components/Header";
+import {Notifications} from "@mantine/notifications";
 
 
 export const metadata: Metadata = {
@@ -37,8 +40,10 @@ export default function RootLayout({
                       className={`antialiased`}
               >
               <MantineProvider theme={theme} defaultColorScheme={'light'}>
+
+                <Notifications />
                 <Container px={60} size={1440} m={'auto'}>
-                  <Header/>
+                  {/*<Header/>*/}
                   {children}
                 </Container>
               </MantineProvider>

@@ -1,6 +1,5 @@
 'use client'
-// app/global-error.js
-export default function Error({ error, reset }) {
+export default function Error({ error, reset }: any) {
   return (
           <html>
           <body>
