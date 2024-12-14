@@ -73,6 +73,7 @@ export default function Home() {
       open()
       return res
     } catch (e: any) {
+      refresh()
       if (e.msg) {
         notifications.show({
           message: e.msg,
