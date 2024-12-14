@@ -10,12 +10,20 @@ import {useRequest} from "ahooks";
 import {getNftList, selectNft, verifyNFT} from "@/service/collection";
 import {notifications} from "@mantine/notifications";
 import umiWithCurrentWalletAdapter from "@/lib/umi/umiWithCurrentWalletAdapter";
-import { TransactionSignature} from "@metaplex-foundation/umi";
+import {TransactionSignature} from "@metaplex-foundation/umi";
 import {base58} from "@metaplex-foundation/umi/serializers";
+import dynamic from "next/dynamic";
+import {useWallet} from "@solana/wallet-adapter-react";
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+const WalletMultiButtonDynamic = dynamic(
+        async () =>
+                (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
+        {ssr: false}
+);
 
 // 字符串转 TransactionSignature
 const toTransactionSignature = (txAddress: string): TransactionSignature => {
@@ -57,7 +65,7 @@ export default function Home() {
         uri: selectedNft.metadataUri,
         fee: selectedNft.collection.sellerFeeBasisPoints
       })
-      const tx= (base58.deserialize(res.tx.signature)[0])
+      const tx = (base58.deserialize(res.tx.signature)[0])
       await sleep(5000)
       await verifyNFT(selectedNft.id, tx)
       refresh()
@@ -81,10 +89,10 @@ export default function Home() {
     const deserializedCreateAssetTxAsU8 = toTransactionSignature('PDbdqMr2VsEmCuMAvUY8ptCxiDBXWPNRDiSsdWbpERRaCRYiAZeuUxmD15LDCrJpCXV66dg9j5SreNS2PMzjsZc');
 
     const tx = await umi.rpc.getTransaction(deserializedCreateAssetTxAsU8)
-    console.log(1111, tx);
   }
 
-
+  const {connect, connected, connecting, disconnect, disconnecting, publicKey, select, wallet, wallets} =
+          useWallet();
   return (
 
 
@@ -143,16 +151,29 @@ export default function Home() {
                 </Box>
 
                 <Stack gap={20} pb={20} justify={'center'} align={'center'}>
-                  <Button w={280} h={44} radius={12} bg={'#FF7438'}
-                          onClick={mint}
-                          loading={loading}
-                  >
-                    {selectedNft?.collection?.mintPrice} sol for Mint
-                  </Button>
 
-                  <Button onClick={getInfo}>
-                    getInfo
-                  </Button>
+                  {
+                    publicKey ? <Button w={280} h={44} radius={12} bg={'#FF7438'}
+                                        onClick={mint}
+                                        loading={loading}
+                            >
+                              {selectedNft?.collection?.mintPrice} sol for Mint
+                            </Button> :
+
+                            <WalletMultiButtonDynamic
+                                    style={{
+                                      borderRadius: 12,
+                                      minWidth: 150,
+                                      height: 40,
+                                      backgroundColor: '#FF9138',
+                                      color: '#000',
+                                      fontWeight: 700,
+                                      fontSize: 16,
+                                      lineHeight: '20px',
+                                    }}
+                            />
+                  }
+
                 </Stack>
 
               </Stack>
