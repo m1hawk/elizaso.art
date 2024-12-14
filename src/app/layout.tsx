@@ -8,7 +8,7 @@ import {theme} from '../theme';
 import "./globals.css";
 import '@mantine/notifications/styles.css';
 
-// import {Header} from "@/components/Header";
+import {Header} from "@/components/Header";
 import {Notifications} from "@mantine/notifications";
 
 
@@ -43,7 +43,7 @@ export default function RootLayout({
 
                 <Notifications />
                 <Container px={60} size={1440} m={'auto'}>
-                  {/*<Header/>*/}
+                  <Header/>
                   {children}
                 </Container>
               </MantineProvider>
