@@ -66,7 +66,7 @@ export default function Home() {
         fee: selectedNft.collection.sellerFeeBasisPoints
       })
       const tx = (base58.deserialize(res.tx.signature)[0])
-      await sleep(5000)
+      await sleep(10000)
       await verifyNFT(selectedNft.id, tx)
       refresh()
       setLink(res.link)
