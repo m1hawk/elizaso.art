@@ -10,6 +10,7 @@ import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { createSignerFromWalletAdapter } from "@metaplex-foundation/umi-signer-wallet-adapters";
 import { WalletAdapter } from "@solana/wallet-adapter-base";
 import { create } from "zustand";
+import {clusterApiUrl, Connection} from "@solana/web3.js";
 
 interface UmiState {
   umi: Umi;
@@ -17,9 +18,14 @@ interface UmiState {
   updateSigner: (signer: WalletAdapter) => void;
 }
 
+const cluster = "devnet";
+const connection = new Connection(clusterApiUrl(cluster), {
+  commitment: "finalized",
+});
+
 const useUmiStore = create<UmiState>()((set, get) => ({
   // Replace URI with either hardcode, a const variable, or .env value
-  umi: createUmi("http://api.devnet.solana.com").use(
+  umi: createUmi(connection.rpcEndpoint).use(
     signerIdentity(
       createNoopSigner(publicKey("11111111111111111111111111111111"))
     )

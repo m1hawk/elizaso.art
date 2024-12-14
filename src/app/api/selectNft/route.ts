@@ -6,6 +6,7 @@ export async function POST(request: NextRequest
 ) {
   const formData = await request.json();
   const id = formData.id
+  const accountAddress = formData.account
   const status = await getNFTVerificationStatus(id)
   if (status.verificationStatus) {
     return Response.json({
