@@ -92,48 +92,57 @@ export async function POST(request: NextRequest
   const formData = await request.json();
   const tx = formData.tx
   const nftId = formData.nftId
-  const nft = await getNFTDetail(nftId)
-  if (nft?.verificationStatus === VerificationStatus.SUCCESS) {
+  try {
+    const nft = await getNFTDetail(nftId)
+    if (nft?.verificationStatus === VerificationStatus.SUCCESS) {
+      return Response.json({
+        success: false,
+        data: null,
+        msg: 'already verified'
+      })
+    }
+    const nftMintPrice = nft?.collection?.mintPrice || 0
+    // PDbdqMr2VsEmCuMAvUY8ptCxiDBXWPNRDiSsdWbpERRaCRYiAZeuUxmD15LDCrJpCXV66dg9j5SreNS2PMzjsZc
+    const deserializedCreateAssetTxAsU8 = toTransactionSignature(tx);
+    let txData = null
+    if (nft?.collection?.authority) {
+      txData = await getTransactionAmount(deserializedCreateAssetTxAsU8, nft?.collection?.authority)
+    }
+    if (nftMintPrice <= (txData?.receiverAmount || 0)) {
+      const nftAddress = txData?.detail?.message?.accounts[1]
+      const userAddress = txData?.detail?.message?.accounts[0]
+      const res = await apiRequest.post('/api/nft-generation/verify-nft', {
+        agentId,
+        collectionAddress: nft?.collectionAddress,
+        collectionAdminPublicKey: nft?.collection?.authority,
+        nftAddress,
+        token: 'v8bAQWbqxYWdGUe42sVY4mNgpn'
+      })
+      console.log(res);
+      await updateNFT({
+        id: nftId
+      }, {
+        address: userAddress,
+        creators: userAddress ? [userAddress] : [],
+        verificationStatus: VerificationStatus.SUCCESS
+      })
+      return Response.json({
+        success: true,
+        data: {nft, txData: null},
+      })
+    } else {
+      return Response.json({
+        success: false,
+        data: null,
+        msg: 'price error'
+      })
+    }
+  } catch (e: any) {
+    console.log(e)
     return Response.json({
       success: false,
       data: null,
-      msg: 'already verified'
-    })
-  }
-  const nftMintPrice = nft?.collection?.mintPrice || 0
-  // PDbdqMr2VsEmCuMAvUY8ptCxiDBXWPNRDiSsdWbpERRaCRYiAZeuUxmD15LDCrJpCXV66dg9j5SreNS2PMzjsZc
-  const deserializedCreateAssetTxAsU8 = toTransactionSignature(tx);
-  let txData = null
-  if (nft?.collection?.authority) {
-    txData = await getTransactionAmount(deserializedCreateAssetTxAsU8, nft?.collection?.authority)
-  }
-  if (nftMintPrice <= (txData?.receiverAmount || 0)) {
-    const nftAddress = txData?.detail?.message?.accounts[1]
-    const userAddress = txData?.detail?.message?.accounts[0]
-    const res = await apiRequest.post('/api/nft-generation/verify-nft', {
-      agentId,
-      collectionAddress: nft?.collectionAddress,
-      collectionAdminPublicKey: nft?.collection?.authority,
-      nftAddress,
-      token: 'v8bAQWbqxYWdGUe42sVY4mNgpn'
-    })
-    console.log(res);
-    await updateNFT({
-      id: nftId
-    }, {
-      address: userAddress,
-      creators: userAddress ? [userAddress] : [],
-      verificationStatus: VerificationStatus.SUCCESS
-    })
-    return Response.json({
-      success: true,
-      data: {nft, txData: null},
-    })
-  } else {
-    return Response.json({
-      success: false,
-      data: null,
-      msg: 'price error'
+      msg: e.message
     })
   }
 
